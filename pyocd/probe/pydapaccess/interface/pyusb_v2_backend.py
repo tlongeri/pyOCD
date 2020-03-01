@@ -258,17 +258,21 @@ def _match_cmsis_dap_v2_interface(interface):
     determine whether it is a CMSIS-DAPv2 interface. These requirements must be met by the
     interface:
     
-    1. Have an interface name string containing "CMSIS-DAP".
+    1. If the configuration is composite (has more than a single interface), the interface
+       name string must contain "CMSIS-DAP".
     2. bInterfaceClass must be 0xff.
     3. bInterfaceSubClass must be 0.
     4. Must have bulk out and bulk in endpoints, with an optional extra bulk in endpoint, in
-        that order.
+       that order.
     """
     try:
+        configuration = usb.core.Configuration(interface.device, interface.configuration)
+
         interface_name = usb.util.get_string(interface.device, interface.iInterface)
         
         # This tells us whether the interface is CMSIS-DAP, but not whether it's v1 or v2.
-        if (interface_name is None) or ("CMSIS-DAP" not in interface_name):
+        if (configuration.bNumInterfaces > 1) \
+            and ((interface_name is None) or ("CMSIS-DAP" not in interface_name)):
             return False
 
         # Now check the interface class to distinguish v1 from v2.
